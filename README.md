@@ -1,7 +1,7 @@
-FRT Opsworks Cookbooks
+Inertialbox Opsworks Cookbooks
 ======================
 
-This contains custom cookbooks for FRT AWS OpsWorks projects.  These cookbooks should not override existing AWS cookbooks or attributes if possible.
+This contains custom cookbooks for Inertialbox AWS OpsWorks projects.  These cookbooks should not override existing AWS cookbooks or attributes if possible.
 https://github.com/aws/opsworks-cookbooks
 
 List of files overriden from AWS cookbooks:
