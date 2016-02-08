@@ -45,12 +45,21 @@ server {
   location / {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $http_host;
-    proxy_redirect off;
 
     <% if @application[:force_ssl] %>
-    # Rewrite everything to HTTPS. Except for the health_check.
+    set $is_https 'off';
+    if ($http_x_forwarded_proto ~ 'https') {
+      set $is_https 'on';
+    }
+    proxy_set_header HTTPS $is_https;
+    <% end %>
+
+    proxy_redirect off;
+
+    <% if @application[:force_ssl] && @application[:elb_uri].present? %>
+    # Rewrite everything to the HTTPS ELB. Except for the health_check.
     if ($http_x_forwarded_proto != 'https') {
-      rewrite ^((?!/health_check).) https://$host$uri permanent;
+      rewrite ^((?!/health_check).) https://<%= @application[:elb_uri] %>$uri permanent;
     }
     <% end %>
 
