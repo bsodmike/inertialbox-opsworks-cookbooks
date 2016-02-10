@@ -57,10 +57,15 @@ server {
     proxy_redirect off;
 
     <% if @application[:force_ssl] && @application[:elb_uri].present? %>
-    # Rewrite everything to the HTTPS ELB. Except for the health_check.
+    # Redirect everything to ELB as HTTPS. Except for the `health_check`.
     if ($http_x_forwarded_proto != 'https') {
       rewrite ^((?!/health_check).) https://<%= @application[:elb_uri] %>$uri permanent;
     }
+
+    # config to enable HSTS(HTTP Strict Transport Security)
+    # https://developer.mozilla.org/en-US/docs/Security/HTTP_Strict_Transport_Security
+    # to avoid ssl stripping https://en.wikipedia.org/wiki/SSL_stripping#SSL_stripping
+    add_header Strict-Transport-Security "max-age=31536000; includeSubdomains;";
     <% end %>
 
     if (-f $document_root/offline) {
