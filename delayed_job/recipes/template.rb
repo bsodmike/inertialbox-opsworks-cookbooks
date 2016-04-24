@@ -1,4 +1,3 @@
-
 include_recipe 'deploy'
 
 node[:deploy].each do |application, deploy|
@@ -29,7 +28,11 @@ node[:deploy].each do |application, deploy|
     workers = [global]
   end
 
-  template "/etc/monit.d/#{application}_delayed_job.monitrc" do
+  deploy_node = node[:deploy]
+  deploy_app = deploy_node.keys.first
+  env_vars = deploy_node[deploy_app][:environment_variables]
+
+  template "/etc/monit/conf.d/#{application}_delayed_job.monitrc" do
     source 'delayed_job.monitrc.erb'
     owner 'root'
     group 'root'
@@ -40,7 +43,8 @@ node[:deploy].each do |application, deploy|
       :dir => deploy[:deploy_to],
       :user => deploy[:user],
       :group => deploy[:group],
-      :workers => workers
+      :workers => workers,
+      :opswork_stack_env_vars => env_vars
     )
     only_if { deploy[:delayed_job] }
   end

@@ -25,7 +25,7 @@ sleep 1
 CODE
 
     action :nothing
-    subscribes :run, "template[/etc/monit.d/#{application}_delayed_job.monitrc]", :immediately
+    subscribes :run, "template[/etc/monit/conf.d/#{application}_delayed_job.monitrc]", :immediately
     notifies :run, "bash[delayed_job-#{application}-stop]", :immediately
   end
 end
