@@ -4,7 +4,8 @@ upstream unicorn_<%= @application[:domains].first %> {
 
 server {
   listen 80;
-  server_name <%= @application[:domains].join(" ") %> <%= node[:hostname] %>;
+  server_name ~^(www\.)?(?<domain>.+)$;
+
   access_log <%= node[:nginx][:log_dir] %>/<%= @application[:domains].first %>.access.log;
 
   keepalive_timeout 5;
@@ -56,16 +57,22 @@ server {
 
     proxy_redirect off;
 
-    <% if @application[:force_ssl] && @application[:elb_uri].present? %>
+    <% if @application[:force_ssl] %>
     # Redirect everything to ELB as HTTPS. Except for the `health_check`.
     if ($http_x_forwarded_proto != 'https') {
-      rewrite ^((?!/health_check).) https://<%= @application[:elb_uri] %>$uri permanent;
+      rewrite ^((?!/health_check).) https://$domain$uri permanent;
     }
 
     # config to enable HSTS(HTTP Strict Transport Security)
     # https://developer.mozilla.org/en-US/docs/Security/HTTP_Strict_Transport_Security
     # to avoid ssl stripping https://en.wikipedia.org/wiki/SSL_stripping#SSL_stripping
     add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload";
+    <% else %>
+
+    # Redirect non-www to www:
+    if ($request_uri ~ ^(www\.)) {
+      return 301 $scheme://www.$domain$uri;
+    }
     <% end %>
 
     if (-f $document_root/offline) {
