@@ -9,10 +9,15 @@ server {
   access_log <%= node[:nginx][:log_dir] %>/<%= @application[:domains].first %>.access.log;
 
   <% if @application[:force_ssl] %>
-    # Redirect everything to ELB as HTTPS. Except for the `health_check`.
-    if ($host !~ (www\.)) {
-      rewrite ^((?!/health_check).) https://www.$domain$uri permanent;
-    }
+  # Redirect everything to ELB as HTTPS. Except for the `health_check`.
+  if ($host !~ (www\.)) {
+    rewrite ^((?!/health_check).) https://www.$domain$uri permanent;
+  }
+  <% else %>
+  # Redirect HTTP non-www to www:
+  if ($host !~ (www\.)) {
+    rewrite ^((?!/health_check).) $scheme://www.$domain$uri;
+  }
   <% end %>
 
   keepalive_timeout 5;
@@ -69,11 +74,6 @@ server {
     # https://developer.mozilla.org/en-US/docs/Security/HTTP_Strict_Transport_Security
     # to avoid ssl stripping https://en.wikipedia.org/wiki/SSL_stripping#SSL_stripping
     add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload";
-    <% else %>
-    # Redirect non-www to www:
-    if ($request_uri ~ ^(www\.)) {
-      return 301 $scheme://www.$domain$uri;
-    }
     <% end %>
 
     if (-f $document_root/offline) {
