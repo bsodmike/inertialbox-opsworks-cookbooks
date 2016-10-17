@@ -13,6 +13,10 @@ server {
   if ($host !~ (www\.)) {
     rewrite ^((?!/health_check).) https://www.$domain$uri permanent;
   }
+
+  if ($http_x_forwarded_proto != "https") {
+    rewrite ^((?!/health_check).) https://www.$domain$uri permanent;
+  }
   <% else %>
   # Redirect HTTP non-www to www:
   if ($host !~ (www\.)) {
